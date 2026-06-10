@@ -17,7 +17,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         # ---- CONFIGURACIÓN DE LA EC2 PRIVADA (DESTINO: BACKEND DESPACHOS) ----
-        host: ${{ secrets.EC2_DESPACHOS_PRIVATE_IP }} # La IP PRIVADA de tu instancia de Despachos
+        host: ${{ secrets.EC2_DESPACHOS_IP }} # La IP PRIVADA de tu instancia de Despachos
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         

@@ -17,7 +17,7 @@ jobs:
       uses: appleboy/ssh-action@v1.0.3
       with:
         # ---- CONFIGURACIÓN DE LA EC2 PRIVADA (DESTINO: BACKEND VENTAS) ----
-        host: ${{ secrets.EC2_VENTAS_PRIVATE_IP }} # La IP PRIVADA de tu instancia de Ventas
+        host: ${{ secrets.EC2_VENTAS_IP }} # La IP PRIVADA de tu instancia de Ventas
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         
