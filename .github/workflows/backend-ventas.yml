@@ -3,55 +3,53 @@ name: CI/CD Backend Ventas
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - 'back-Ventas_SpringBoot/**'
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: back-ventas
   CONTAINER_NAME: back-ventas-container
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout del código
-      uses: actions/checkout@v4
-
-    - name: Configurar credenciales de AWS
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Autenticar en Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - name: Compilar y Subir Imagen a ECR
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: latest
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./back-Ventas_SpringBoot/Springboot-API-REST
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-    - name: Desplegar en EC2 Privada (Ventas)
+    # Eliminamos checkout, build y push. Conexión directa a través del bastión.
+    - name: Desplegar en EC2 Privada (Ventas) mediante Bastión
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.EC2_FRONTEND_IP }}
+        # ---- CONFIGURACIÓN DE LA EC2 PRIVADA (DESTINO: BACKEND VENTAS) ----
+        host: ${{ secrets.EC2_VENTAS_PRIVATE_IP }} # La IP PRIVADA de tu instancia de Ventas
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        
+        # ---- CONFIGURACIÓN DEL BASTIÓN (EC2 PÚBLICA) ----
+        proxy_host: ${{ secrets.EC2_FRONTEND_IP }} # La IP PÚBLICA del frontend
+        proxy_username: ec2-user
+        proxy_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        
+        # ---- COMANDOS A EJECUTAR EN LA EC2 PRIVADA DE VENTAS ----
         script: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-          docker pull ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-          docker stop ${{ env.CONTAINER_NAME }} || true
-          docker rm ${{ env.CONTAINER_NAME }} || true
+          # 1. Pasar credenciales temporales de AWS Academy
+          export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
+          
+          # 2. Autenticar Docker con tu ECR usando la ruta estática
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 572392556337.dkr.ecr.us-east-1.amazonaws.com
+          
+          # 3. Traer (PULL) la imagen de Spring Boot desde tu ECR
+          docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-ventas:latest
+          
+          # 4. Detener y limpiar el contenedor antiguo si existe
+          docker stop back-ventas-container || true
+          docker rm back-ventas-container || true
+          
+          # 5. Levantar el contenedor de Spring Boot mapeando el puerto 8080 y conectándolo a la DB
           docker run -d -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.DB_PRIVATE_IP }}:3306/db_sistema \
+            -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DB_PRIVATE_IP }}:3306/db_sistema \
             -e SPRING_DATASOURCE_USERNAME=user_sistema \
             -e SPRING_DATASOURCE_PASSWORD=userpassword \
-            --name ${{ env.CONTAINER_NAME }} \
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            --name back-ventas-container \
+            572392556337.dkr.ecr.us-east-1.amazonaws.com/back-ventas:latest
+            
+          # 6. Limpiar credenciales por seguridad
+          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
