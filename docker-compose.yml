@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # --- SERVICIO 1: Base de Datos MySQL ---
+  bd-mysql:
+    image: mysql:8.0
+    container_name: bd-mysql-container
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: db_sistema
+      MYSQL_USER: user_sistema
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - red-sistema
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- SERVICIO 2: Backend de Ventas ---
+  back-ventas:
+    build:
+      context: ./back-Ventas_SpringBoot/Springboot-API-REST
+      dockerfile: Dockerfile
+    container_name: back-ventas-container
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://bd-mysql:3306/db_sistema?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=user_sistema
+      - SPRING_DATASOURCE_PASSWORD=userpassword
+    networks:
+      - red-sistema
+    depends_on:
+      bd-mysql:
+        condition: service_healthy
+
+  # --- SERVICIO 3: Backend de Despachos ---
+  back-despachos:
+    build:
+      context: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+      dockerfile: Dockerfile
+    container_name: back-despachos-container
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://bd-mysql:3306/db_sistema?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=user_sistema
+      - SPRING_DATASOURCE_PASSWORD=userpassword
+    networks:
+      - red-sistema
+    depends_on:
+      bd-mysql:
+        condition: service_healthy
+
+  # --- SERVICIO 4: Frontend (React + Nginx) ---
+  frontend:
+    build:
+      context: ./front_despacho
+      dockerfile: Dockerfile
+    container_name: front-despacho-container
+    ports:
+      - "8080:80"
+    networks:
+      - red-sistema
+    depends_on:
+      - back-ventas
+      - back-despachos
+
+volumes:
+  mysql_data:
+
+networks:
+  red-sistema:
+    driver: bridge
