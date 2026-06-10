@@ -40,7 +40,7 @@ jobs:
     - name: Desplegar en EC2 Privada (Despachos)
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.EC2_DESPACHOS_IP }}
+        host: ${{ secrets.EC2_FRONTEND_IP }}
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
