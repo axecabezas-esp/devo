@@ -1,59 +1,38 @@
-name: CI/CD Frontend
+name: Deploy Frontend desde ECR
 
 on:
   push:
-    branches: [ "main" ]
-    # Asegúrate de que esta carpeta coincida con tu repositorio
-    paths:
-      - 'front_despacho/**' 
-
-env:
-  AWS_REGION: us-east-1
-  CONTAINER_NAME: front-despacho-container
+    branches: [ "main" ] # Se activará cuando hagas un push a main para iniciar el despliegue
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout del código
-      uses: actions/checkout@v4
-
-    - name: Configurar credenciales de AWS
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Autenticar en Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - name: Compilar y Subir Imagen a ECR (URI Estática)
-      run: |
-        # Compilar usando la ruta estática de tu ECR
-        docker build -t 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:latest ./proyectosemestral-frontend
-        
-        # Subir la imagen
-        docker push 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:latest
-
-    - name: Desplegar en EC2 pública mediante SSH (URI Estática)
+    # Solo nos conectamos directamente a la EC2 por SSH
+    - name: Desplegar en EC2 pública mediante SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_FRONTEND_IP }}
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
-          # Autenticar Docker dentro de la EC2
+          # 1. Configurar las credenciales de AWS dentro de la EC2 (necesario para el login de ECR)
+          export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          export AWS_SESSION_TOKEN="${{ secrets.AWS_SESSION_TOKEN }}"
+          
+          # 2. Autenticar Docker con tu ECR
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 572392556337.dkr.ecr.us-east-1.amazonaws.com
           
-          # Descargar la nueva imagen
+          # 3. Traer (PULL) la imagen desde ECR hacia la EC2
           docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:latest
           
-          # Limpiar contenedor antiguo si existe
+          # 4. Detener y limpiar el contenedor anterior si existe
           docker stop front-despacho-container || true
           docker rm front-despacho-container || true
           
-          # Correr el nuevo contenedor
+          # 5. Correr el nuevo contenedor con la imagen fresca de ECR
           docker run -d -p 80:80 --name front-despacho-container 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:latest
+          
+          # 6. Limpiar credenciales de la sesión de la terminal por seguridad
+          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
