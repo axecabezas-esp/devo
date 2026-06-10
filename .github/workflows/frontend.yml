@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
     # Asegúrate de que esta carpeta coincida con tu repositorio
     paths:
-      - 'proyectosemestral-frontend/**' 
+      - 'front_despacho/**' 
 
 env:
   AWS_REGION: us-east-1
