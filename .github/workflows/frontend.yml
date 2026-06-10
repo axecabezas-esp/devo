@@ -7,7 +7,6 @@ on:
       - 'front_despacho/**'
       - '.github/workflows/frontend.yml'
 
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -23,7 +22,9 @@ jobs:
         aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Requerido para AWS Academy
         aws-region: us-east-1
 
-
+    - name: Autenticar en AWS ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
     - name: Construir y Subir Imagen a ECR
       env:
