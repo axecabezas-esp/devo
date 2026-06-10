@@ -40,15 +40,15 @@ jobs:
           docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-despachos:latest
           
           # 4. Detener y limpiar el contenedor antiguo si existe
-          docker stop back-despachos-container || true
-          docker rm back-despachos-container || true
+          docker stop proyectosemestral-back-despachos || true
+          docker rm proyectosemestral-back-despachos || true
           
           # 5. Levantar el contenedor mapeando el puerto 8080 y apuntando a la base de datos interna
           docker run -d -p 8080:8080 \
             -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DB_PRIVATE_IP }}:3306/db_sistema \
             -e SPRING_DATASOURCE_USERNAME=user_sistema \
             -e SPRING_DATASOURCE_PASSWORD=userpassword \
-            --name back-despachos-container \
+            --name proyectosemestral-back-despachos \
             572392556337.dkr.ecr.us-east-1.amazonaws.com/back-despachos:latest
             
           # 6. Limpiar credenciales por seguridad

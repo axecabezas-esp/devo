@@ -40,16 +40,16 @@ jobs:
           docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-ventas:latest
           
           # 4. Detener y limpiar el contenedor antiguo si existe
-          docker stop back-ventas-container || true
-          docker rm back-ventas-container || true
+          docker stop proyectosemestral-back-ventas || true
+          docker rm proyectosemestral-back-ventas || true
           
           # 5. Levantar el contenedor de Spring Boot mapeando el puerto 8080 y conectándolo a la DB
           docker run -d -p 8080:8080 \
             -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DB_PRIVATE_IP }}:3306/db_sistema \
             -e SPRING_DATASOURCE_USERNAME=user_sistema \
             -e SPRING_DATASOURCE_PASSWORD=userpassword \
-            --name back-ventas-container \
-            572392556337.dkr.ecr.us-east-1.amazonaws.com/back-ventas:latest
+            --name proyectosemestral-back-ventas \
+            572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-ventas:latest
             
           # 6. Limpiar credenciales por seguridad
           unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
