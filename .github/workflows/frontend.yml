@@ -37,7 +37,7 @@ jobs:
         IMAGE_TAG: latest
       run: |
         # 2. REVISIÓN: El comando docker build usa las variables definidas arriba
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./proyectosemestral-frontend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG proyectosemestral-frontend/
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Desplegar en EC2 pública mediante SSH
