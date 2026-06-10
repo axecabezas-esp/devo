@@ -31,6 +31,3 @@ jobs:
           
           # 5. Correr el nuevo contenedor con la imagen fresca de ECR
           docker run -d -p 80:80 --name proyectosemestral-frontend 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:latest
-          
-          # 6. Limpiar credenciales de la sesión de la terminal por seguridad
-          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
