@@ -20,7 +20,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }} # Requerido para AWS Academy
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
         aws-region: us-east-1
 
     - name: Autenticar en AWS ECR
@@ -32,12 +32,9 @@ jobs:
         ECR_REGISTRY: 572392556337.dkr.ecr.us-east-1.amazonaws.com
         ECR_REPOSITORY: proyectosemestral-frontend
         IMAGE_TAG: v1
-        VITE_API_URL: http://${{ secrets.EC2_FRONTEND_IP }}:8080 
       run: |
-        docker build \
-          --build-arg VITE_API_URL=$VITE_API_URL \
-          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-          ./front_despacho
+        # Build limpio sin URLs harcodeadas de AWS
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./front_despacho
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
   deploy:
@@ -52,13 +49,15 @@ jobs:
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 572392556337.dkr.ecr.us-east-1.amazonaws.com
-          docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v2
+          docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v1
           docker stop proyectosemestral-frontend || true
           docker rm proyectosemestral-frontend || true
-          docker run -d -p 80:80 --name proyectosemestral-frontend 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v1
-
+          
+          # CORREGIDO: Pasamos las IPs privadas de tus Backends como variables de entorno al contenedor
           docker run -d -p 80:80 \
-          -e EC2_VENTAS_IP=${{ secrets.EC2_VENTAS_IP }} \
-          -e EC2_DESPACHOS_IP=${{ secrets.EC2_DESPACHOS_IP }} \
-          --name proyectosemestral-frontend \
-          572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v2
+            -e EC2_VENTAS_IP=${{ secrets.EC2_VENTAS_IP }} \
+            -e EC2_DESPACHOS_IP=${{ secrets.EC2_DESPACHOS_IP }} \
+            --name proyectosemestral-frontend \
+            572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v1
+            
+          unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
