@@ -7,48 +7,52 @@ on:
       - 'back-Despachos_SpringBoot/**'
       - '.github/workflows/backend-despachos.yml'
 
-env:
-  AWS_REGION: us-east-1
-  CONTAINER_NAME: back-despachos-container
-
-
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-    # Eliminamos checkout, build y push. Conexión directa a través del bastión.
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    - name: Configurar credenciales de AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: us-east-1
+
+    - name: Autenticar en AWS ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Construir y Subir Imagen a ECR
+      run: |
+        docker build -t 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-despachos:v1 ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+        docker push 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-despachos:v1
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
     - name: Desplegar en EC2 Privada (Despachos) mediante Bastión
       uses: appleboy/ssh-action@v1.0.3
       with:
-        # ---- CONFIGURACIÓN DE LA EC2 PRIVADA (DESTINO: BACKEND DESPACHOS) ----
-        host: ${{ secrets.EC2_DESPACHOS_IP }} # La IP PRIVADA de tu instancia de Despachos
+        host: ${{ secrets.EC2_DESPACHOS_IP }}
         username: ec2-user
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-        
-        # ---- CONFIGURACIÓN DEL BASTIÓN (EC2 PÚBLICA) ----
-        proxy_host: ${{ secrets.EC2_FRONTEND_IP }} # La IP PÚBLICA del frontend
+        proxy_host: ${{ secrets.EC2_FRONTEND_IP }}
         proxy_username: ec2-user
         proxy_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-        
-        # ---- COMANDOS A EJECUTAR EN LA EC2 PRIVADA DE DESPACHOS ----
         script: |
-          # 2. Autenticar Docker con tu ECR usando la ruta estática
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 572392556337.dkr.ecr.us-east-1.amazonaws.com
-          
-          # 3. Traer (PULL) la imagen de Spring Boot desde tu ECR
           docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-despachos:v1
-          
-          # 4. Detener y limpiar el contenedor antiguo si existe
           docker stop proyectosemestral-back-despachos || true
           docker rm proyectosemestral-back-despachos || true
-          
-          # 5. Levantar el contenedor mapeando el puerto 8080 y apuntando a la base de datos interna
           docker run -d -p 8080:8080 \
             -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DATABASE_IP }}:3306/db_sistema \
             -e SPRING_DATASOURCE_USERNAME=user_sistema \
             -e SPRING_DATASOURCE_PASSWORD=userpassword \
             --name proyectosemestral-back-despachos \
             572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-back-despachos:v1
-            
-          # 6. Limpiar credenciales por seguridad
           unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
