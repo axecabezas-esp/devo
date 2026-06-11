@@ -7,14 +7,26 @@ export const TableCompras = () => {
   const [ventas, setVentas] = useState([]);
 
   const compras = async () => {
-    await axios.get("/api/v1/ventas", {
-      headers:{
+    await axios.get("/api/ventas", {
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-  }
+      }
     }).then((response) => {
-      console.log(response.data);
-      setVentas(response.data);
+      console.log("Datos recibidos de Ventas:", response.data);
+      
+      // Si Spring Boot te está envolviendo la lista en una propiedad (por ejemplo 'content' o 'data')
+      if (response.data && response.data.content) {
+        setVentas(response.data.content);
+      } else if (Array.isArray(response.data)) {
+        setVentas(response.data);
+      } else {
+        console.error("Alerta: La API de ventas no retornó un Array directo.", response.data);
+        setVentas([]); // Evita que se rompa asignando un array vacío por defecto
+      }
+    }).catch((error) => {
+      console.error("Error al conectar con el microservicio de ventas:", error);
+      setVentas([]);
     });
   };
   // Llamada a la función para obtener los datos cuando el componente se monta
@@ -48,32 +60,40 @@ export const TableCompras = () => {
                 </tr>
               </thead>
               <tbody>
-                {ventas
-                  .filter((venta) => !venta.despachoGenerado)
-                  .map((venta) => (
-                    <tr key={venta.idVenta}>
-                      <td className="pr-10 py-10 items-center">
-                        {venta.idVenta}
-                      </td>
-                      <td className="pr-10 py-10  items-center">
-                        {venta.direccionCompra}
-                      </td>
-                      <td className="pr-10 py-10  items-center">
-                        {venta.fechaCompra}
-                      </td>
-                      <td className="pr-10 py-10  items-center">
-                        ${venta.valorCompra}
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => handleAbrirModal(venta)}
-                          className="py-1 bg-orange-200 px-8 rounded-xl shadow-md hover:bg-orange-300/70 transition-all duration-300 "
-                        >
-                          Generar Despacho
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                {Array.isArray(ventas) ? (
+                  ventas
+                    .filter((venta) => venta && !venta.despachoGenerado)
+                    .map((venta) => (
+                      <tr key={venta.idVenta}>
+                        <td className="pr-10 py-10 items-center">
+                          {venta.idVenta}
+                        </td>
+                        <td className="pr-10 py-10 items-center">
+                          {venta.direccionCompra}
+                        </td>
+                        <td className="pr-10 py-10 items-center">
+                          {venta.fechaCompra}
+                        </td>
+                        <td className="pr-10 py-10 items-center">
+                          ${venta.valorCompra}
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => handleAbrirModal(venta)}
+                            className="py-1 bg-orange-200 px-8 rounded-xl shadow-md hover:bg-orange-300/70 transition-all duration-300 "
+                          >
+                            Generar Despacho
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="py-10 text-gray-500">
+                      No se pudieron cargar las compras o el formato de datos es incorrecto.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
