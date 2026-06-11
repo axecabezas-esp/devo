@@ -12,7 +12,6 @@ env:
   CONTAINER_NAME: bd-mysql-container
 
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
