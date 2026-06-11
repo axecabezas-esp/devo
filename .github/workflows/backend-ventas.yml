@@ -12,7 +12,6 @@ env:
   CONTAINER_NAME: back-ventas-container
 
 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
