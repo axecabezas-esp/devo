@@ -45,7 +45,7 @@ jobs:
           
           # 5. Levantar el contenedor de Spring Boot mapeando el puerto 8080 y conectándolo a la DB
           docker run -d -p 8080:8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DATABASE_IP }}:3306/ventas_db \
+            -e SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.EC2_DATABASE_IP }}:3306/db_sistema \
             -e SPRING_DATASOURCE_USERNAME=user_sistema \
             -e SPRING_DATASOURCE_PASSWORD=userpassword \
             --name proyectosemestral-back-ventas \
