@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ventas/ {
+        # Docker inyectará este valor al arrancar
+        proxy_pass http://${EC2_VENTAS_IP}:8080/; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /api/despachos/ {
+        # Docker inyectará este valor al arrancar
+        proxy_pass http://${EC2_DESPACHOS_IP}:8080/; 
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}

@@ -193,12 +193,12 @@ resource "aws_security_group" "sg_backend_1" {
   vpc_id      = aws_vpc.vpc_principal.id
 
 ingress {
-    description = "API Ventas desde Internet"
-    from_port   = 8081           # Cambiado al puerto externo de tu Docker Compose
-    to_port     = 8081
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Permite que el navegador del usuario se conecte
-  }
+  description     = "API Ventas desde el Frontend"
+  from_port       = 8080
+  to_port         = 8080
+  protocol        = "tcp"
+  security_groups = [aws_security_group.sg_frontend.id] # Solo permite tráfico del Front
+}
 
   ingress {
     description = "SSH interno"
@@ -223,12 +223,12 @@ resource "aws_security_group" "sg_backend_2" {
   vpc_id      = aws_vpc.vpc_principal.id
 
 ingress {
-    description = "API Despachos desde Internet"
-    from_port   = 8082           # Cambiado al puerto externo de tu Docker Compose
-    to_port     = 8082
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Permite que el navegador del usuario se conecte
-  }
+  description     = "API Despachos desde el Frontend"
+  from_port       = 8080
+  to_port         = 8080
+  protocol        = "tcp"
+  security_groups = [aws_security_group.sg_frontend.id] # Solo permite tráfico del Front
+}
 
   ingress {
     description = "SSH interno"
