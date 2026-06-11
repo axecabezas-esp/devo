@@ -192,12 +192,12 @@ resource "aws_security_group" "sg_backend_1" {
   description = "Acceso exclusivo para el Backend 1"
   vpc_id      = aws_vpc.vpc_principal.id
 
-  ingress {
-    description     = "API desde Frontend"
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [aws_security_group.sg_frontend.id]
+ingress {
+    description = "API Ventas desde Internet"
+    from_port   = 8081           # Cambiado al puerto externo de tu Docker Compose
+    to_port     = 8081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Permite que el navegador del usuario se conecte
   }
 
   ingress {
@@ -222,12 +222,12 @@ resource "aws_security_group" "sg_backend_2" {
   description = "Acceso exclusivo para el Backend 2"
   vpc_id      = aws_vpc.vpc_principal.id
 
-  ingress {
-    description     = "API desde Frontend"
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
-    security_groups = [aws_security_group.sg_frontend.id]
+ingress {
+    description = "API Despachos desde Internet"
+    from_port   = 8082           # Cambiado al puerto externo de tu Docker Compose
+    to_port     = 8082
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Permite que el navegador del usuario se conecte
   }
 
   ingress {
@@ -326,7 +326,7 @@ resource "aws_eip" "eip_front" {
 }
 
 # Instancia Backend 1 (Privada)
-resource "aws_instance" "ec2_backend_1" {
+resource "aws_instance" "ec2_backend_ventas" {
   ami                    = "ami-00e801948462f718a"
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.subred_back1.id
@@ -337,7 +337,7 @@ resource "aws_instance" "ec2_backend_1" {
 }
 
 # Instancia Backend 2 (Privada)
-resource "aws_instance" "ec2_backend_2" {
+resource "aws_instance" "ec2_backend_despachos" {
   ami                    = "ami-00e801948462f718a"
   instance_type          = "t3.micro"
   subnet_id              = aws_subnet.subred_back2.id
@@ -362,6 +362,6 @@ resource "aws_instance" "ec2_datos" {
 # 6. ENTRADAS DE PANTALLA (OUTPUTS)
 # =====================================================================
 output "ip_publica_frontend" { value = aws_eip.eip_front.public_ip }
-output "ip_privada_backend_1" { value = aws_instance.ec2_backend_1.private_ip }
-output "ip_privada_backend_2" { value = aws_instance.ec2_backend_2.private_ip }
+output "ip_privada_backend_1" { value = aws_instance.ec2_backend_ventas.private_ip }
+output "ip_privada_backend_2" { value = aws_instance.ec2_backend_despachos.private_ip }
 output "ip_privada_base_datos" { value = aws_instance.ec2_datos.private_ip }
