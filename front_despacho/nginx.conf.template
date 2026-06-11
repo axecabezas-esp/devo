@@ -8,18 +8,18 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # SIN barra al final de ventas ni en el puerto
-    location /api/ventas {
-        proxy_pass http://${EC2_VENTAS_IP}:8080;
+# Proxy para Ventas (Formato Estricto de Redirección)
+    location /api/ventas/ {
+        proxy_pass http://${EC2_VENTAS_IP}:8080/api/ventas/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # SIN barra al final de despachos ni en el puerto
-    location /api/despachos {
-        proxy_pass http://${EC2_DESPACHOS_IP}:8080;
+    # Proxy para Despachos (Formato Estricto de Redirección)
+    location /api/despachos/ {
+        proxy_pass http://${EC2_DESPACHOS_IP}:8080/api/despachos/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
