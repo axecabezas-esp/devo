@@ -9,7 +9,7 @@ server {
     }
 
     # Proxy para Ventas (Formato Estricto de Redirección)
-    location /api/ventas/ {
+    location /api/v1/ventas/ {
         # Se agrega /v1/ a la ruta del proxy_pass
         proxy_pass http://${EC2_VENTAS_IP}:8080/api/v1/ventas/;
         proxy_set_header Host $host;
@@ -19,7 +19,7 @@ server {
     }
 
     # Proxy para Despachos (Formato Estricto de Redirección)
-    location /api/despachos/ {
+    location /api/v1/despachos/ {
         # Se agrega /v1/ a la ruta del proxy_pass
         proxy_pass http://${EC2_DESPACHOS_IP}:8080/api/v1/despachos/;
         proxy_set_header Host $host;
