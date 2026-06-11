@@ -19,9 +19,9 @@ server {
     }
 
     # Proxy para Despachos (Formato Estricto de Redirección)
-    location /api/v1/despachos/ {
+    location /api/v1/despachos {
         # Se agrega /v1/ a la ruta del proxy_pass
-        proxy_pass http://${EC2_DESPACHOS_IP}:8080/api/v1/despachos/;
+        proxy_pass http://${EC2_DESPACHOS_IP}:8080/api/v1/despachos;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
