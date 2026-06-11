@@ -49,7 +49,7 @@ jobs:
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 572392556337.dkr.ecr.us-east-1.amazonaws.com
-          docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v1
+          docker pull 572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v2
           docker stop proyectosemestral-frontend || true
           docker rm proyectosemestral-frontend || true
           
@@ -58,6 +58,6 @@ jobs:
             -e EC2_VENTAS_IP=${{ secrets.EC2_VENTAS_IP }} \
             -e EC2_DESPACHOS_IP=${{ secrets.EC2_DESPACHOS_IP }} \
             --name proyectosemestral-frontend \
-            572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v1
+            572392556337.dkr.ecr.us-east-1.amazonaws.com/proyectosemestral-frontend:v2
             
           unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
