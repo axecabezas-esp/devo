@@ -36,9 +36,3 @@ INSERT INTO venta (id, nombre_cliente, monto_total, fecha_venta, estado_venta) V
 (2, 'Constanza Silva', 128900.0, '2026-06-03 14:15:00', 'PAGADO'),
 (3, 'Mauricio Araya', 23500.0, '2026-06-05 18:45:00', 'PENDIENTE'),
 (4, 'Gabriela Tapia', 67000.0, '2026-06-08 11:00:00', 'PAGADO');
-
--- Insertar Despachos de prueba de acuerdo al nuevo esquema
-INSERT INTO despacho (id_despacho, id_compra, direccion_compra, comuna, fecha_despacho, patente_camion, entregado, intento) VALUES
-(1, 1, 'Av. Concha y Toro 543', 'Puente Alto', '2026-06-02 09:00:00', 'AA-BB-11', TRUE, 1),
-(2, 2, 'Pasaje Los Alerces 1120', 'La Florida', '2026-06-04 11:30:00', 'CC-DD-22', FALSE, 2),
-(3, 4, 'Calle Nueva York 88', 'Santiago Centro', NULL, NULL, FALSE, 0);
